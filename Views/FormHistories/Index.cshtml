@@ -1,0 +1,156 @@
+﻿@model IEnumerable<M8OU.Models.FormHistory>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section CSS
+{
+		<!--begin::Page Vendors Styles(used by this page)-->
+		<link href="assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+		<!--end::Page Vendors Styles-->
+}
+
+
+<!--begin::Card-->
+<div class="card card-custom">
+    <div class="card-header flex-wrap border-0 pt-6 pb-0">
+        <div class="card-title">
+            <h3 class="card-label">
+                My Form Histories
+                <span class="d-block text-muted pt-2 font-size-sm">Histories of all form submitted using the application</span>
+            </h3>
+        </div>
+        <div class="card-toolbar">
+            <!--begin::Button-->
+            <a asp-action="Create" class="btn btn-primary font-weight-bolder">
+                <span class="svg-icon svg-icon-md">
+                    <!--begin::Svg Icon | path:assets/media/svg/icons/Design/Flatten.svg-->
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24"/>
+                            <circle fill="#000000" cx="9" cy="15" r="6"/>
+                            <path d="M8.8012943,7.00241953 C9.83837775,5.20768121 11.7781543,4 14,4 C17.3137085,4 20,6.6862915 20,10 C20,12.2218457 18.7923188,14.1616223 16.9975805,15.1987057 C16.9991904,15.1326658 17,15.0664274 17,15 C17,10.581722 13.418278,7 9,7 C8.93357256,7 8.86733422,7.00080962 8.8012943,7.00241953 Z" fill="#000000" opacity="0.3"/>
+                        </g>
+                    </svg>
+                    <!--end::Svg Icon-->
+                </span>Submit New Form
+            </a>
+            <!--end::Button-->
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-checkable" id="datatable">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Submit on</th>
+                <th>Number of submissions</th>
+                <th>Number of questions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var formHistory in Model)
+            {
+                <tr>
+                    <td>
+                        @formHistory.Name
+                    </td>
+                    <td>
+                        @formHistory.TimeOfSubmission
+                    </td>
+                    <td>
+                        @formHistory.NumberOfSubmission
+                    </td>
+                    <td>
+                        @formHistory.NumberOfQuestion
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <table class="formQuestion table table-bordered table-checkable">
+                            <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Number of submissions</th>
+                                <th>Number of options</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var formQuestion in formHistory.FormQuestions)
+                            {
+                                <tr>
+                                    <td>@formQuestion.QuestionContent</td>
+                                    <td>@formQuestion.QuestionType</td>
+                                    <td>@formQuestion.TotalSubmissionNumber</td>
+                                    <td>@(formQuestion.FormQuestionOptions.Count() == 1 ? "Single option" : formQuestion.FormQuestionOptions.Count())</td>
+                                </tr>
+                                @if (formQuestion.FormQuestionOptions.Count() != 1)
+                                //if there is more than one option in question, show option table(Checkbox, Radio),Questions like Paragraph won't show
+                                {
+                                    <tr>
+                                        <td colspan="4">
+                                            <table class="formOption table table-bordered table-checkable">
+                                                <thead>
+                                                <tr>
+                                                    <th>Title</th>
+                                                    <th>Number of submissions</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    @foreach (var formOption in formQuestion.FormQuestionOptions)
+                                                    {
+                                                        <td>@formOption.Content</td>
+                                                        <td>@formOption.SubmissionNumber</td>
+                                                    }
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <!--end: Datatable-->
+    </div>
+</div>
+<!--end::Card-->
+
+@section Scripts
+{
+    <script src="~/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.formOption').each(function() {
+                $(this).DataTable({
+                    responsive: true,
+                    "paging":   false,
+                    "ordering": false,
+                    "info":     false
+                });
+            });
+
+            $('.formQuestion').each(function () {
+                $(this).DataTable({
+                    responsive: true,
+                    "paging":   false,
+                    "ordering": false,
+                    "info":     false
+                });
+            });
+
+            $('#datatable').DataTable({
+                responsive: true
+            });
+        });
+    </script>
+}

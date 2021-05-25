@@ -1,0 +1,15 @@
+﻿@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout))
+    {
+        Layout = (string)parentLayout;
+    }
+}
+<!--begin::Profile Personal Information-->
+<div class="d-flex flex-row">
+    <partial name="_ManageNav" />
+    @RenderBody()
+    </div>
+    @section Scripts {
+        @RenderSection("Scripts", required: false)
+        <script src="~/assets/js/pages/custom/profile/profile.js"></script>
+    }

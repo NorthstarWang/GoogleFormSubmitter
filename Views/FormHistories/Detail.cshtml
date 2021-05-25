@@ -1,0 +1,48 @@
+﻿@model M8OU.Models.FormHistory
+
+@{
+    ViewData["Title"] = "Detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Css{
+
+}
+
+<div class="card card-custom gutter-b">
+    <div class="card-header">
+        <div class="card-title">
+            <h3 class="card-label">
+                @Model.Name
+                <small>@Model.Description</small>
+            </h3>
+        </div>
+    </div>
+    <div class="card-body">]
+        <div class="pb-5">
+            <h4 class="mb-10 font-weight-bold text-dark">Question Number: @Model.NumberOfQuestion</h4>
+            
+            @foreach (var question in Model.FormQuestions)
+            {
+                <h4>@question.QuestionType</h4>
+                <h4>@question.QuestionContent</h4>
+                @foreach (var option in question.FormQuestionOptions)
+                {
+                    <h4>@option.Content</h4>
+                }
+            }
+
+            <h6 class="font-weight-bolder mb-3">Current Address:</h6>
+            <div class="text-dark-50 line-height-lg">
+                <div>Address Line 1</div>
+                <div>Address Line 2</div>
+                <div>Melbourne 3000, VIC, Australia</div>
+            </div>
+            <div class="separator separator-dashed my-5"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+
+}

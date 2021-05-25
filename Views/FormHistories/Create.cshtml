@@ -1,0 +1,53 @@
+﻿@model M8OU.Models.FormHistory
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-custom gutter-b">
+         <div class="card-header">
+          <h3 class="card-title">Form Submission</h3>
+         </div>
+         <form asp-action="Create" class="form">
+                   <div class="card-body">
+                  
+                    <div class="mb-3">
+                     <div class="form-group row">
+                                           <label class="col-lg-3 col-form-label">URL</label>
+                                           <div class="col-lg-6">
+                                            <div class="input-group">
+                                             <div class="input-group-prepend"><span class="input-group-text"><i class="la la-chain"></i></span></div>
+                                             <input type="text" name="Url" class="form-control" placeholder="Enter the Google form URL"/>
+                                            </div>
+                                           </div>
+                                          </div>
+                     <div class="form-group row">
+                      <label class="col-lg-3 col-form-label">Number of Submission</label>
+                      <div class="col-lg-6">
+                       <input type="number" class="form-control" name="number" step="1" max="100" min="1" placeholder="Enter number of submissions"/>
+                       <span class="form-text text-muted">Please enter the number of forms you want to submit.</span>
+                      </div>
+                     </div>
+                    </div>
+                  
+                   </div>
+                   <div class="card-footer">
+                    <div class="row">
+                     <div class="col-lg-3"></div>
+                     <div class="col-lg-6">
+                      <button type="submit" class="btn btn-success mr-2">Submit</button>
+                      <button type="reset" class="btn btn-secondary">Cancel</button>
+                     </div>
+                    </div>
+                   </div>
+                  </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+ @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
