@@ -74,78 +74,32 @@ namespace M8OU.Controllers
             JArray convertedArray = JArray.Parse(jsVariable);
             
             //Fill the json data to class
-            FormHistory formHistory = await SortFormData(convertedArray);
+            FormHistory formHistory = SortFormData(convertedArray);
             
             return formHistory;
         }
 
-        private async Task<FormHistory> SortFormData(JArray arr)
+        private FormHistory SortFormData(JArray arr)
         {
             //append fetch data to class instances
-            FormHistory formHistory = new FormHistory();
-            
-            var description = arr[1][0].ToString();
-            formHistory.Description = description;
-            
-            var title = arr[3].ToString();
-            formHistory.Name = title;
-            
-            var link = "https://docs.google.com/forms/d/"+arr[14].ToString()+"/viewform";
-            formHistory.URL = link;
+            FormHistory formHistory = FormHistoryValueAssign(arr);
             
             var questions = arr[1][1];
             List<FormQuestion> questionsList = new List<FormQuestion>();
             foreach (var question in questions)
             {
-                FormQuestion formQuestion = new FormQuestion();
-                formQuestion.QuestionNumber = Convert.ToInt32(question[0]);
-                formQuestion.QuestionContent = question[1]==null?"Question":question[1].ToString();
-                formQuestion.QuestionType = await GetQuestionType(Convert.ToInt32(question[3]));
-                formQuestion.Required = Convert.ToInt32(question[4][0][2]) == 1;
-
-                if (!formQuestion.QuestionType.Equals("Other"))
+                FormQuestion formQuestion = new FormQuestion
                 {
-                    switch (formQuestion.QuestionType)
-                    {
-                        case "Short answer":
-                        case "Paragraph":
-                        {
-                            //no processing since no option
-                            break;
-                        }
-                        case "Grid":
-                        {
-                            //loop the option under the question, then add to list
-                            List<FormQuestionOption> questionOptionsList = new List<FormQuestionOption>();
-                            foreach (var option in question[4])
-                            {
+                    QuestionNumber = Convert.ToInt32(question[0]),
+                    QuestionContent = question[1] == null ? "Question" : question[1].ToString(),
+                    //Identify the question type base on the number in the json
+                    QuestionType = GetQuestionType(Convert.ToInt32(question[3])),
+                    Required = Convert.ToInt32(question[4][0][2]) == 1
+                };
 
-                            }
-
-                            break;
-                        }
-                        default:
-                        {
-                            //loop the option under the question, then add to list
-                            List<FormQuestionOption> questionOptionsList = new List<FormQuestionOption>();
-                            foreach (var option in question[4][0][1])
-                            {
-                                //if the options is others, it will be excluded
-                                if (Convert.ToInt32(option[4]) != 1)
-                                {
-                                    FormQuestionOption formQuestionOption = new FormQuestionOption();
-                                    formQuestionOption.Content = option[0].ToString();
-                                    questionOptionsList.Add(formQuestionOption);
-                                }
-                            }
-                            formQuestion.FormQuestionOptions = questionOptionsList;
-
-                            //each question class instance will be added to formHistory
-                            questionsList.Add(formQuestion);
-                            break;
-                        }
-                    }
-                }
+                //The insertion of options of each question is depending on the type the question is.
+                formQuestion = QuestionProcessByType(formQuestion, question);
+                questionsList.Add(formQuestion);
             }
             formHistory.FormQuestions = questionsList;
             formHistory.NumberOfQuestion = questionsList.Count();
@@ -153,7 +107,131 @@ namespace M8OU.Controllers
             return formHistory;
         }
 
-        public async Task<string> GetQuestionType(int i)
+        private FormQuestion QuestionProcessByType(FormQuestion formQuestion, JToken question)
+        {
+            if (!formQuestion.QuestionType.Equals("Other"))
+            {
+                switch (formQuestion.QuestionType)
+                {
+                    case "Short answer":
+                    case "Paragraph":
+                    {
+                        //no processing since no option
+                        break;
+                    }
+                    case "Grid":
+                    {
+                        formQuestion = GridOptionAppend(formQuestion, question[4]);
+                        break;
+                    }
+                    case "Linear Scale":
+                    {
+                        formQuestion = LinearScaleOptionAppend(formQuestion, question[4][0][1]);
+                        break;
+                    }
+                    default:
+                    {
+                        //For default question type, the options will be inserted normally
+                        formQuestion = DefaultQuestionInsert(formQuestion, question[4][0][1]);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                //Other will not be processed
+            }
+
+            return formQuestion;
+        }
+
+        private FormHistory FormHistoryValueAssign(JArray arr)
+        {
+            //append fetch data to class instances
+            FormHistory formHistory = new FormHistory();
+
+            var description = arr[1][0].ToString();
+            formHistory.Description = description;
+
+            var title = arr[3].ToString();
+            formHistory.Name = title;
+
+            var link = "https://docs.google.com/forms/d/" + arr[14].ToString() + "/viewform";
+            formHistory.URL = link;
+
+            return formHistory;
+        }
+
+        private FormQuestion LinearScaleOptionAppend(FormQuestion formQuestion, JToken question)
+        {
+            //loop the option under the question, then add to list
+            List<FormQuestionOption> questionOptionsList = new List<FormQuestionOption>();
+            foreach (var option in question)
+            {
+                FormQuestionOption formQuestionOption = new FormQuestionOption
+                {
+                    Content = option[0].ToString()
+                };
+                questionOptionsList.Add(formQuestionOption);
+            }
+            formQuestion.FormQuestionOptions = questionOptionsList;
+            return formQuestion;
+        }
+
+        private FormQuestion GridOptionAppend(FormQuestion formQuestion, JToken question)
+        {
+            //loop the option under the question, then add to list
+            List<FormQuestionOption> questionOptionsList = new List<FormQuestionOption>();
+
+            //The grid json is listed in row-column alignment where each row contains multiple alike columns
+            foreach (var row in question)
+            {
+                //one row = one option
+                FormQuestionOption formQuestionOption = new FormQuestionOption();
+                List<OptionColumn> cols = new List<OptionColumn>();
+
+                //each row has at least one column name as well as its own name, array[1] contains all columns' names, [2] defines whether it is required and [3] is the row name
+                foreach (var col in row[1])
+                {
+                    OptionColumn optionColumn = new OptionColumn
+                    {
+                        Name = col[0].ToString()
+                    };
+
+                    cols.Add(optionColumn);
+                }
+
+                formQuestionOption.Content = row[3].ToString();
+                formQuestionOption.OptionColumns = cols;
+
+                questionOptionsList.Add(formQuestionOption);
+            }
+
+            formQuestion.FormQuestionOptions = questionOptionsList;
+            return formQuestion;
+        }
+
+        private FormQuestion DefaultQuestionInsert(FormQuestion formQuestion, JToken question)
+        {
+            //loop the option under the question, then add to list
+            List<FormQuestionOption> questionOptionsList = new List<FormQuestionOption>();
+            foreach (var option in question)
+            {
+                //if the options is others, it will be excluded
+                if (Convert.ToInt32(option[4]) != 1)
+                {
+                    FormQuestionOption formQuestionOption = new FormQuestionOption
+                    {
+                        Content = option[0].ToString()
+                    };
+                    questionOptionsList.Add(formQuestionOption);
+                }
+            }
+            formQuestion.FormQuestionOptions = questionOptionsList;
+            return formQuestion;
+        }
+
+        private string GetQuestionType(int i)
         {
             if (i == 0)
             {

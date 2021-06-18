@@ -37,6 +37,14 @@ namespace M8OU.Models
         public Guid Id { get; set; }
         public string Content { get; set; }
         public int SubmissionNumber { get; set; }
+        public List<OptionColumn> OptionColumns { get; set; }
         public FormQuestion FormQuestion { get; set; }
+    }
+
+    public class OptionColumn
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public FormQuestionOption FormQuestionOption { get; set; }
     }
 }
