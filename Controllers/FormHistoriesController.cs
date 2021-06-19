@@ -47,7 +47,7 @@ namespace M8OU.Controllers
         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string Url, int number)
+        public RedirectToActionResult Create(string Url, int number)
         {
             return RedirectToAction("Detail", new {Url=Url, number = number});
         }
@@ -93,7 +93,7 @@ namespace M8OU.Controllers
                     QuestionNumber = Convert.ToInt32(question[0]),
                     QuestionContent = question[1] == null ? "Question" : question[1].ToString(),
                     //Identify the question type base on the number in the json
-                    QuestionType = GetQuestionType(Convert.ToInt32(question[3])),
+                    QuestionType = GetQuestionType(question),
                     Required = Convert.ToInt32(question[4][0][2]) == 1
                 };
 
@@ -119,12 +119,13 @@ namespace M8OU.Controllers
                         //no processing since no option
                         break;
                     }
-                    case "Grid":
+                    case "Multiple choice grid":
+                    case "Checkbox grid":
                     {
                         formQuestion = GridOptionAppend(formQuestion, question[4]);
                         break;
                     }
-                    case "Linear Scale":
+                    case "Linear scale":
                     {
                         formQuestion = LinearScaleOptionAppend(formQuestion, question[4][0][1]);
                         break;
@@ -201,7 +202,7 @@ namespace M8OU.Controllers
                     cols.Add(optionColumn);
                 }
 
-                formQuestionOption.Content = row[3].ToString();
+                formQuestionOption.Content = row[3][0].ToString();
                 formQuestionOption.OptionColumns = cols;
 
                 questionOptionsList.Add(formQuestionOption);
@@ -231,8 +232,9 @@ namespace M8OU.Controllers
             return formQuestion;
         }
 
-        private string GetQuestionType(int i)
+        private string GetQuestionType(JToken question)
         {
+            int i = Convert.ToInt32(question[3]);
             if (i == 0)
             {
                 return "Short answer";
@@ -254,12 +256,21 @@ namespace M8OU.Controllers
             }
             else if (i == 5)
             {
-                return "Linear Scale";
+                return "Linear scale";
             }
             else if (i == 7)
             {
-                //Process different way
-                return "Grid";
+                //Process different way, the grid is either multiple or single choice available on each row
+                if (question[4][0][11][0].ToString().Equals("0"))
+                {
+                    //radio choice on each row
+                    return "Multiple choice grid";
+                }
+                else
+                {
+                    //multiple choice on each row
+                    return "Checkbox grid";
+                }
             }
             else
             {

@@ -18,18 +18,58 @@
             </h3>
         </div>
     </div>
-    <div class="card-body">]
+    <div class="card-body">
         <div class="pb-5">
             <h4 class="mb-10 font-weight-bold text-dark">Question Number: @Model.NumberOfQuestion</h4>
-            
+
             @foreach (var question in Model.FormQuestions)
             {
                 <h4>@question.QuestionType</h4>
                 <h4>@question.QuestionContent</h4>
-                @foreach (var option in question.FormQuestionOptions)
+                @switch (question.QuestionType)
                 {
-                    <h4>@option.Content</h4>
+                    case "Short answer":
+                    case "Paragraph":
+                        {
+                            <h4>Nothing</h4>
+                            break;
+                        }
+                    case "Multiple choice grid":
+                    case "Checkbox grid":
+                        {
+                            @foreach (var option in question.FormQuestionOptions)
+                            {
+                                <h4>@option.Content</h4>
+                                @foreach (var col in option.OptionColumns)
+                                {
+                                    <h5>@col.Name</h5>
+                                }
+                            }
+                            break;
+                        }
+                    case "Linear scale":
+                        {
+                            @foreach (var option in question.FormQuestionOptions)
+                            {
+                                <h4>@option.Content</h4>
+                            }
+                            break;
+                        }
+                    case "Other":
+                        {
+                            <h4>Nothing</h4>
+                            break;
+                        }
+                    default:
+                        {
+                            @foreach (var option in question.FormQuestionOptions)
+                            {
+                                <h4>@option.Content</h4>
+                            }
+                            break;
+                        }
                 }
+
             }
 
             <h6 class="font-weight-bolder mb-3">Current Address:</h6>
